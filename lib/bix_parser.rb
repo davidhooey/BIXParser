@@ -145,11 +145,22 @@ module BIXParser
     def gather_words(data)
         word_hash = Hash.new(0)
         data.each do |text|
-            words = text.downcase.scan(/\p{Word}+/)
-            for word in words
-                dcWord = UnicodeUtils.downcase(word)
-                word_hash[dcWord] += 1
+            # Need to convert from ASCII-8BIT to UTF-8.
+            # It seems Ruby 1.9 uses ASCII-8BIT intenally.
+            # See https://github.com/cfis/libxml-ruby/pull/7
+            # http://stackoverflow.com/questions/2148729/libxml-converts-accented-characters-into-backlash-x-escapes-json-is-not-happy
+            utf8_text = text.force_encoding('UTF-8')
+            dc_text = UnicodeUtils.downcase(utf8_text)
+            # I'm hoping UnicodeUtils.each_word will split on CKJ characters.
+            UnicodeUtils.each_word(dc_text) do |word|
+                unless word.scan( /\p{Word}+/u ).empty?
+                    word_hash[word] += 1
+                end
             end
+            #words = dcText.scan(/w+/)
+            #for word in words
+            #    word_hash[word] += 1
+            #end
         end
         return word_hash.keys.to_a.sort.join(' ').insert(0,' ').insert(-1,' ')
     end    
