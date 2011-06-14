@@ -56,15 +56,16 @@ module BIXParser
                 @in_hymn = true
                 @item = Item.new
                 @item.number = attributes['number']
-                @item.title = attributes['title']
+                @item.title = attributes['title'] if attributes.has_key?('title')
             end
         end
             
         def on_end_element_ns (name, prefix, uri) 
             if name == 'item'
                 @in_hymn = false
-                @item.wordlist = BIXParser::gather_words(hymn_data)
-                @item.data = hymn_data
+                @item.wordlist = BIXParser::gather_words(@hymn_data)
+                @item.data = @hymn_data
+                @item.title = @item.data[0] if @item.title == nil
                 @hymn_data = Array.new
                 @hymns_array << item
             end
