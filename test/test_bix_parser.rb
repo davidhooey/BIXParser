@@ -3,6 +3,8 @@
 SCRIPT_PATH = File.dirname(__FILE__)
 $:.unshift(File.join(SCRIPT_PATH, '../lib'))
 
+DATA_PATH = SCRIPT_PATH + '/../data/'
+
 require 'test/unit'
 require 'bix_parser'
 
@@ -31,16 +33,16 @@ class TestBookixParser < Test::Unit::TestCase
     
     def setup
         # English Setup
-        @hymn_array_en_hymns = parse_hymns('HymnsEN.dat')
-        @hymn_array_en_bookix = parse_bookix('Hymns.English.Hymns Old and New 1987.bookix')
+        @hymn_array_en_hymns = parse_hymns(DATA_PATH + 'HymnsEN.dat')
+        @hymn_array_en_bookix = parse_bookix(DATA_PATH + 'Hymns.English.Hymns Old and New 1987.bookix')
         
         # French Setup
-        @hymn_array_fr_hymns = parse_hymns('HymnsFR.dat')
-        @hymn_array_fr_bookix = parse_bookix('Hymns.Cantiques 1998.bookix')
+        @hymn_array_fr_hymns = parse_hymns(DATA_PATH + 'HymnsFR.dat')
+        @hymn_array_fr_bookix = parse_bookix(DATA_PATH + 'Hymns.Cantiques 1998.bookix')
         
         # Russian Setup
-        #@hymn_array_ru_hymns = parse_hymns('HymnsRU.dat')
-        #@hymn_array_ru_bookix = parse_bookix('Hymns.Песни Старые и новые 2005.bookix')
+        @hymn_array_ru_hymns = parse_hymns(DATA_PATH + 'HymnsRU.dat')
+        @hymn_array_ru_bookix = parse_bookix(DATA_PATH + 'Hymns.Песни Старые и новые 2005.bookix')
     end
     
     def parse_hymns(file)
@@ -50,11 +52,14 @@ class TestBookixParser < Test::Unit::TestCase
     end
     
     def parse_bookix(file)
-        io = File.open(file,'r:UTF-8')
-        bookix_parser = XML::SaxParser.io(io, :encoding => XML::Encoding::UTF_8)
+        #io = File.open(file,'r:UTF-8')
+        #bookix_parser = XML::SaxParser.io(io, :encoding => XML::Encoding::UTF_8)
+        data = File.new(file, 'r').read.gsub('&nbsp;',' ').force_encoding('UTF-8')
+        bookix_parser = XML::SaxParser.string(data)
         parse_bookix = BIXParser::ParseBookix.new
         bookix_parser.callbacks = parse_bookix
         bookix_parser.parse
+        #io.close
         return parse_bookix.hymns_array
     end
     
@@ -92,6 +97,7 @@ class TestBookixParser < Test::Unit::TestCase
         end
         return count
     end
+
         
     # English Tests
     def test_en_hymns_count
@@ -180,6 +186,46 @@ class TestBookixParser < Test::Unit::TestCase
         assert_equal(FR_RANGE, hymn_array_wordlist(@hymn_array_fr_bookix))
     end
 
-
+    
+    # Russian Tests
+    def test_ru_hymns_count
+        assert_equal(RU_RANGE, @hymn_array_ru_hymns.size)
+    end
+    
+    def test_ru_hymns_number_exists
+        assert_equal(RU_RANGE, hymn_array_numbers(@hymn_array_ru_hymns,RU_RANGE))
+    end
+    
+    def test_ru_hymns_title_exists
+        assert_equal(RU_RANGE, hymn_array_title(@hymn_array_ru_hymns))
+    end
+    
+    def test_ru_hymns_data_exists
+        assert_equal(RU_RANGE, hymn_array_data(@hymn_array_ru_hymns))
+    end
+    
+    def test_ru_hymns_wordlist_exists
+        assert_equal(RU_RANGE, hymn_array_wordlist(@hymn_array_ru_hymns))
+    end
+    
+    def test_ru_bookix_count
+        assert_equal(RU_RANGE, @hymn_array_ru_bookix.size)
+    end
+    
+    def test_ru_bookix_number_exists
+        assert_equal(RU_RANGE, hymn_array_numbers(@hymn_array_ru_bookix,RU_RANGE))
+    end
+    
+    def test_ru_bookix_title_exists
+        assert_equal(RU_RANGE, hymn_array_title(@hymn_array_ru_bookix))
+    end
+    
+    def test_ru_bookix_data_exists
+        assert_equal(RU_RANGE, hymn_array_data(@hymn_array_ru_bookix))
+    end
+    
+    def test_ru_bookix_wordlist_exists
+        assert_equal(RU_RANGE, hymn_array_wordlist(@hymn_array_ru_bookix))
+    end
 
 end
