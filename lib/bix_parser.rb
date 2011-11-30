@@ -1,9 +1,7 @@
 # encoding: utf-8
 
 require 'unicode_utils'
-require 'xml/libxml'
-
-include LibXML # gem install libxml-ruby
+require "rexml/document"
 
 module BIXParser
     
@@ -21,9 +19,9 @@ module BIXParser
             @hymns_array = Array.new
         end        
     end
-    
+        
     class ParseBookix < Book
-        include XML::SaxParser::Callbacks
+        include REXML
         
         #<book>
         #<item
@@ -40,59 +38,31 @@ module BIXParser
         #...        
         #</book>        
         
-        attr_accessor :in_hymn
-        attr_accessor :hymn_data
         attr_accessor :item
         
         def initialize
             super
-            @in_hymn = false
-            @hymn_data = Array.new
-            @item = nil            
-        end                
-            
-        def on_start_element_ns (name, attributes, prefix, uri, namespaces) 
-            if name == 'item'
-                @in_hymn = true
-                @item = Item.new
-                @item.number = attributes['number']
-                @item.title = attributes['title'] if attributes.has_key?('title')
-            end
+            @item = nil
         end
-            
-        def on_end_element_ns (name, prefix, uri) 
-            if name == 'item'
-                @in_hymn = false
-                @item.wordlist = BIXParser::gather_words(@hymn_data)
-                @item.data = @hymn_data
-                @item.title = @item.data[0] if @item.title == nil
-                @hymn_data = Array.new
-                @hymns_array << item
-            end
-        end
-            
-        def on_characters (chars)
-            @hymn_data << chars if @in_hymn
-        end
-    end
         
-    class ParseBookIndex < Book
-        include XML::SaxParser::Callbacks
-
-        #<item>
-        #1. Tell Me the Story of Jesus
-        #
-        #Tell me the story of Jesus;
-        #Write on my heart every word.
-        #Stay, let me say, “I will follow
-        #Him who has suffered for me.”
-        #
-        #meter? 8, 7, 8, 7, 8, 7, 8, 7, 8, 7, 8, 7
-        #</item>        
+        def parse_bookix(data)
+            xml_data = Document.new(data)
+            xml_data.elements.each("book/item") do |element|
+                @item = Item.new
+                @item.number = element.attributes['number']
+                @item.title = element.attributes['title']
+                @item.data = element.text.strip
+                @item.data << "\n\nCopyright: #{element.attributes['Copyright']}" if not element.attributes['Copyright'].nil?
+                data_array = element.text.strip.split("\n")
+                @item.wordlist = BIXParser::gather_words(data_array)
+                @item.title = data_array[0] if @item.title == nil
+                @hymns_array << @item
+            end
+        end
+        
     end
-    
+            
     class ParseHymns < Book
-        include XML::SaxParser::Callbacks
         
         #<hymn>
         #1. Tell Me the Story of Jesus
