@@ -3,10 +3,10 @@
 SCRIPT_PATH = File.dirname(__FILE__)
 $:.unshift(File.join(SCRIPT_PATH, '../lib'))
 
-DATA_PATH = SCRIPT_PATH + '/../data/'
+DATA_PATH = SCRIPT_PATH + '/data/'
 
 require 'test/unit'
-require 'bix_parser'
+require 'bixparser'
 
 include BIXParser
 include REXML

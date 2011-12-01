@@ -1,10 +1,11 @@
 # encoding: utf-8
 
-APP_ROOT = File.dirname(__FILE__)
+SCRIPT_PATH = File.dirname(__FILE__)
+$:.unshift(File.join(SCRIPT_PATH, '../lib'))
 
-$:.unshift(File.join(APP_ROOT, 'lib'))
+DATA_PATH = SCRIPT_PATH + '/data/'
 
-require 'bix_parser'
+require 'bixparser'
 
 include BIXParser
 
@@ -14,7 +15,7 @@ class PrintHymns
     
     def initialize(file)
         @string_data = String.new
-        data_file = File.new(File.join("data",file), 'r:UTF-8')
+        data_file = File.new(DATA_PATH + file, 'r:UTF-8')
         data_file.each_line do |line|
              @string_data << line
         end
