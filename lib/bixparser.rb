@@ -17,7 +17,30 @@ module BIXParser
         
         def initialize
             @hymns_array = Array.new
-        end        
+        end
+        
+        def gather_words(data)
+            word_hash = Hash.new(0)
+            data.each do |text|
+                # Need to convert from ASCII-8BIT to UTF-8.
+                # It seems Ruby 1.9 uses ASCII-8BIT intenally.
+                # See https://github.com/cfis/libxml-ruby/pull/7
+                # http://stackoverflow.com/questions/2148729/libxml-converts-accented-characters-into-backlash-x-escapes-json-is-not-happy
+                utf8_text = text.force_encoding('UTF-8')
+                dc_text = UnicodeUtils.downcase(utf8_text)
+                # I'm hoping UnicodeUtils.each_word will split on CKJ characters.
+                UnicodeUtils.each_word(dc_text) do |word|
+                    unless word.scan( /\p{Word}+/u ).empty?
+                        word_hash[word] += 1
+                    end
+                end
+                #words = dcText.scan(/w+/)
+                #for word in words
+                #    word_hash[word] += 1
+                #end
+            end
+            return word_hash.keys.to_a.sort.join(' ').insert(0,' ').insert(-1,' ')
+        end            
     end
         
     class ParseBookix < Book
@@ -25,17 +48,19 @@ module BIXParser
         
         #<book>
         #<item
-        #  meter="8, 7, 8, 7, 8, 7, 8, 7, 8, 7, 8, 7"
-        #  number="1"
-        #  title="Tell Me the Story of Jesus">
+        #  Copyright="©"
+        #  author="Sam Jones"
+        #  composer="May Whittle Moody (1870-)"
+        #  meter="10, 10, 10, 10, 10, 10, 10, 10"
+        #  number="3"
+        #  title="Tell Me Again">
         #
-        #Tell me the story of Jesus;
-        #Write on my heart every word.
-        #Stay, let me say, “I will follow
-        #Him who has suffered for me.”
-        #
+        #Tell me again of God’s wonderful love:
+        #How Jesus left those fair mansions above,
+        #Suffered and died for my sins on the tree;
+        #He made atonement for you and for me.
+        #...
         #</item>
-        #...        
         #</book>        
         
         attr_accessor :item
@@ -52,9 +77,20 @@ module BIXParser
                 @item.number = element.attributes['number']
                 @item.title = element.attributes['title']
                 @item.data = element.text.strip
-                @item.data << "\n\nCopyright: #{element.attributes['Copyright']}" if not element.attributes['Copyright'].nil?
+                metadata = Array.new
+                metadata << "\nCopyright: #{element.attributes['Copyright']}" if not element.attributes['Copyright'].nil?
+                metadata << "\nAuthor: #{element.attributes['author']}" if not element.attributes['author'].nil?
+                metadata << "\nComposer: #{element.attributes['composer']}" if not element.attributes['composer'].nil?
+                metadata << "\nMeter: #{element.attributes['meter']}" if not element.attributes['meter'].nil?
+                if metadata.size != 0
+                    @item.data << "\n #{metadata.join}"
+                end
+                #@item.data << "\n\nCopyright: #{element.attributes['Copyright']}" if not element.attributes['Copyright'].nil?
+                #@item.data << "\nAuthor: #{element.attributes['author']}" if not element.attributes['author'].nil?
+                #@item.data << "\nComposer: #{element.attributes['composer']}" if not element.attributes['composer'].nil?
+                #@item.data << "\nMeter: #{element.attributes['meter']}" if not element.attributes['meter'].nil?
                 data_array = element.text.strip.split("\n")
-                @item.wordlist = BIXParser::gather_words(data_array)
+                @item.wordlist = gather_words(data_array)
                 @item.title = data_array[0] if @item.title == nil
                 @hymns_array << @item
             end
@@ -89,7 +125,7 @@ module BIXParser
                 end
                 if line =~ /<\/hymn>/u
                     in_hymn = false
-                    item.wordlist = BIXParser::gather_words(hymn_data)
+                    item.wordlist = gather_words(hymn_data)
                     hymn_data.delete_at(0) if hymn_data[0] =~ /^\r?\n$/
                     hymn_data[-1].chomp!
                     item.data = hymn_data.join
@@ -112,29 +148,6 @@ module BIXParser
         end
                 
     end
-    
-    def gather_words(data)
-        word_hash = Hash.new(0)
-        data.each do |text|
-            # Need to convert from ASCII-8BIT to UTF-8.
-            # It seems Ruby 1.9 uses ASCII-8BIT intenally.
-            # See https://github.com/cfis/libxml-ruby/pull/7
-            # http://stackoverflow.com/questions/2148729/libxml-converts-accented-characters-into-backlash-x-escapes-json-is-not-happy
-            utf8_text = text.force_encoding('UTF-8')
-            dc_text = UnicodeUtils.downcase(utf8_text)
-            # I'm hoping UnicodeUtils.each_word will split on CKJ characters.
-            UnicodeUtils.each_word(dc_text) do |word|
-                unless word.scan( /\p{Word}+/u ).empty?
-                    word_hash[word] += 1
-                end
-            end
-            #words = dcText.scan(/w+/)
-            #for word in words
-            #    word_hash[word] += 1
-            #end
-        end
-        return word_hash.keys.to_a.sort.join(' ').insert(0,' ').insert(-1,' ')
-    end    
-    
+        
 end
     
