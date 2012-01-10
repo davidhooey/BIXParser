@@ -77,18 +77,15 @@ module BIXParser
                 @item.number = element.attributes['number']
                 @item.title = element.attributes['title']
                 @item.data = element.text.strip
-                metadata = Array.new
-                metadata << "\nCopyright: #{element.attributes['Copyright']}" if not element.attributes['Copyright'].nil?
-                metadata << "\nAuthor: #{element.attributes['author']}" if not element.attributes['author'].nil?
-                metadata << "\nComposer: #{element.attributes['composer']}" if not element.attributes['composer'].nil?
-                metadata << "\nMeter: #{element.attributes['meter']}" if not element.attributes['meter'].nil?
-                if metadata.size != 0
-                    @item.data << "\n #{metadata.join}"
+                item_attributes = Array.new
+                element.attributes.keys.each do |k|
+                    if k != 'number' and k != 'title'
+                        item_attributes << "\n#{k}: #{element.attributes[k]}" if not element.attributes[k].nil?
+                    end
                 end
-                #@item.data << "\n\nCopyright: #{element.attributes['Copyright']}" if not element.attributes['Copyright'].nil?
-                #@item.data << "\nAuthor: #{element.attributes['author']}" if not element.attributes['author'].nil?
-                #@item.data << "\nComposer: #{element.attributes['composer']}" if not element.attributes['composer'].nil?
-                #@item.data << "\nMeter: #{element.attributes['meter']}" if not element.attributes['meter'].nil?
+                if item_attributes.size != 0
+                    @item.data << "\n #{item_attributes.join}"
+                end                                
                 data_array = element.text.strip.split("\n")
                 @item.wordlist = gather_words(data_array)
                 @item.title = data_array[0] if @item.title == nil
