@@ -57,7 +57,7 @@ class TestBookixParser < Test::Unit::TestCase
     RU_RANGE = 373
     attr_accessor :hymn_array_ru_hymns
     attr_accessor :hymn_array_ru_bookix
-    RU_COPYRIGHT = []
+    RU_COPYRIGHT = [3,5]
     
     def setup
         # English Setup

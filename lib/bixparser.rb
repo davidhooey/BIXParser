@@ -76,17 +76,21 @@ module BIXParser
                 @item = Item.new
                 @item.number = element.attributes['number']
                 @item.title = element.attributes['title']
-                @item.data = element.text.strip
+                @item.data = element.text.strip.gsub('&nbsp;',' ')
                 item_attributes = Array.new
                 element.attributes.keys.each do |k|
                     if k != 'number' and k != 'title'
-                        item_attributes << "\n#{k}: #{element.attributes[k]}" if not element.attributes[k].nil?
+                        if not element.attributes[k].nil?
+                            if element.attributes[k].strip.length > 0
+                                item_attributes << "\n#{k}: #{element.attributes[k].strip}"
+                            end
+                        end
                     end
                 end
                 if item_attributes.size != 0
                     @item.data << "\n #{item_attributes.join}"
                 end                                
-                data_array = element.text.strip.split("\n")
+                data_array = element.text.strip.gsub('&nbsp;',' ').split("\n")
                 @item.wordlist = gather_words(data_array)
                 @item.title = data_array[0] if @item.title == nil
                 @hymns_array << @item
