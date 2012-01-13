@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
     s.name          = 'bixparser'
-    s.version       = '1.0.3'
+    s.version       = '1.0.4'
     s.authors       = ['David Hooey']
     s.email         = ['davidhooey@gmail.com']
     s.homepage      = ''

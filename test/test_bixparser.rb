@@ -57,20 +57,42 @@ class TestBookixParser < Test::Unit::TestCase
     RU_RANGE = 373
     attr_accessor :hymn_array_ru_hymns
     attr_accessor :hymn_array_ru_bookix
-    RU_COPYRIGHT = [3,5]
+    RU_COPYRIGHT = [3, 5, 7, 9, 12, 14, 15, 16, 17, 18, 20, 23, 27, 28, 29, 33, 35, 36, 37, 38,
+                    40, 41, 44, 46, 47, 50, 51, 52, 54, 55, 56, 57, 59, 60, 63, 66, 67, 68, 69,
+                    70, 71, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 84, 86, 88, 89, 90, 91, 92,
+                    93, 94, 95, 96, 97, 98, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111,
+                    112, 113, 115, 117, 118, 121, 123, 125, 126, 127, 128, 130, 131, 134, 138,
+                    140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 154, 155,
+                    156, 157, 158, 159, 160, 161, 163, 165, 167, 168, 169, 170, 173, 175, 176,
+                    177, 179, 180, 181, 183, 184, 187, 188, 189, 190, 191, 192, 193, 196, 197,
+                    198, 199, 200, 201, 202, 208, 210, 213, 214, 215, 217, 218, 219, 220, 222,
+                    224, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 237, 238, 240, 241,
+                    242, 243, 244, 245, 246, 247, 248, 249, 251, 252, 254, 255, 256, 257, 258,
+                    260, 262, 264, 265, 266, 268, 269, 270, 271, 272, 274, 276, 279, 280, 283,
+                    284, 285, 286, 288, 290, 291, 292, 294, 295, 296, 299, 300, 307, 309, 310,
+                    311, 312, 313, 315, 316, 317, 318, 319, 320, 322, 324, 325, 326, 327, 328,
+                    329, 330, 331, 332, 333, 334, 335, 336, 337, 338, 339, 340, 341, 342, 343,
+                    345, 346, 347, 348, 350, 351, 352, 353, 354, 355, 357, 358, 359, 360, 363,
+                    364, 365, 366, 367, 368, 369, 370, 371, 372, 373]
     
     def setup
         # English Setup
+        @en_bookix_file = 'Hymns.English.Hymns Old and New 1987.bookix'
         @hymn_array_en_hymns = parse_hymns(DATA_PATH + 'HymnsEN.dat')
-        @hymn_array_en_bookix = parse_bookix(DATA_PATH + 'Hymns.English.Hymns Old and New 1987.bookix')
+        @hymn_array_en_bookix = parse_bookix(DATA_PATH + @en_bookix_file)
+        generate_copyright_report(@en_bookix_file, @hymn_array_en_bookix, EN_COPYRIGHT)
         
         # French Setup
+        @fr_bookix_file = 'Hymns.Cantiques 1998.bookix'
         @hymn_array_fr_hymns = parse_hymns(DATA_PATH + 'HymnsFR.dat')
-        @hymn_array_fr_bookix = parse_bookix(DATA_PATH + 'Hymns.Cantiques 1998.bookix')
+        @hymn_array_fr_bookix = parse_bookix(DATA_PATH + @fr_bookix_file)
+        generate_copyright_report(@fr_bookix_file, @hymn_array_fr_bookix, FR_COPYRIGHT)
         
         # Russian Setup
+        @ru_bookix_file = 'Hymns.русский язык.Песни Старые и новые 2005.bookix'
         @hymn_array_ru_hymns = parse_hymns(DATA_PATH + 'HymnsRU.dat')
-        @hymn_array_ru_bookix = parse_bookix(DATA_PATH + 'Hymns.Песни Старые и новые 2005.bookix')
+        @hymn_array_ru_bookix = parse_bookix(DATA_PATH + @ru_bookix_file)
+        generate_copyright_report(@ru_bookix_file, @hymn_array_ru_bookix, RU_COPYRIGHT)        
     end
     
     def parse_hymns(file)
@@ -88,6 +110,33 @@ class TestBookixParser < Test::Unit::TestCase
         bookix_parser = ParseBookix.new
         bookix_parser.parse_bookix(string_data)
         return bookix_parser.hymns_array
+    end
+    
+    def generate_copyright_report(file_name, hymns_array, copy_right_numbers)
+        report_file = File.new(file_name.sub(".bookix","-copyright_test.rpt"), "w")
+        
+        hymns_with_copyrights = hymn_array_copyright(hymns_array, copy_right_numbers)
+        
+        report_file.write("copy_right_numbers: #{copy_right_numbers.size}\n")
+        report_file.write("hymns_with_copyrights: #{hymns_with_copyrights.size}\n\n")
+        
+        report_file.write("Verify Copyright Exists\n\n")
+        
+        copy_right_numbers.each do |i|
+            if not hymns_with_copyrights.include?(i)
+                report_file.write("#{i} Copyright missing.\n")
+            end
+        end
+        
+        report_file.write("\nVerify Copyright Should Not Exist\n\n")
+        
+        hymns_with_copyrights.each do |i|
+            if not copy_right_numbers.include?(i)
+                report_file.write("#{i} Remove copyright.\n")
+            end
+        end        
+
+        report_file.close
     end
         
     def hymn_array_numbers(array,range)
@@ -123,17 +172,28 @@ class TestBookixParser < Test::Unit::TestCase
     end
     
     def hymn_array_copyright(array, copyright_array)
-        count = 0
-        puts copyright_array.size
+        hymns_with_copyrights = Array.new
         array.each do |hymn|
             if hymn.data =~ /©/
-                count += 1 if copyright_array.include?(hymn.number.to_i)
+                if copyright_array.include?(hymn.number.to_i)
+                    hymns_with_copyrights << hymn.number.to_i
+                end
             end
+        end
+        return hymns_with_copyrights
+    end
+
+    def hymn_array_nbsp(array)
+        count = 0
+        array.each do |hymn|
+            count += 1 if hymn.data =~ /&nbsp;/
+            count += 1 if hymn.title =~ /&nbsp;/
+            count += 1 if hymn.wordlist =~ /&nbsp;/
         end
         return count        
     end
 
-
+    
     #
     # English Tests
     #
@@ -158,7 +218,7 @@ class TestBookixParser < Test::Unit::TestCase
 
     def test_en_hymns_wordlist_exists
         assert_equal(EN_RANGE, hymn_array_wordlist(@hymn_array_en_hymns))
-    end
+    end    
     
     # English: bookix Format
     
@@ -183,8 +243,13 @@ class TestBookixParser < Test::Unit::TestCase
     end
 
     def test_en_bookix_copyright
-        assert_equal(EN_COPYRIGHT.size, hymn_array_copyright(@hymn_array_en_bookix, EN_COPYRIGHT))
+        assert_equal(EN_COPYRIGHT.size, hymn_array_copyright(@hymn_array_en_bookix, EN_COPYRIGHT).size)
     end
+    
+    def test_en_bookix_hymn_array_nbsp
+        assert_equal(0, hymn_array_nbsp(@hymn_array_en_bookix))
+    end
+
 
     #
     # French Tests
@@ -235,9 +300,13 @@ class TestBookixParser < Test::Unit::TestCase
     end
     
     def test_fr_bookix_copyright
-        assert_equal(FR_COPYRIGHT.size, hymn_array_copyright(@hymn_array_fr_bookix, FR_COPYRIGHT))
+        assert_equal(FR_COPYRIGHT.size, hymn_array_copyright(@hymn_array_fr_bookix, FR_COPYRIGHT).size)
     end    
 
+    def test_fr_bookix_hymn_array_nbsp
+        assert_equal(0, hymn_array_nbsp(@hymn_array_fr_bookix))
+    end
+    
     
     #
     # Russian Tests
@@ -285,6 +354,14 @@ class TestBookixParser < Test::Unit::TestCase
     
     def test_ru_bookix_wordlist_exists
         assert_equal(RU_RANGE, hymn_array_wordlist(@hymn_array_ru_bookix))
+    end
+    
+    def test_ru_bookix_copyright
+        assert_equal(RU_COPYRIGHT.size, hymn_array_copyright(@hymn_array_ru_bookix, RU_COPYRIGHT).size)
+    end    
+
+    def test_ru_bookix_hymn_array_nbsp
+        assert_equal(0, hymn_array_nbsp(@hymn_array_ru_bookix))
     end
     
 end
