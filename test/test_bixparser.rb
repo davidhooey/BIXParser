@@ -83,7 +83,7 @@ class TestBookixParser < Test::Unit::TestCase
         generate_copyright_report(@en_bookix_file, @hymn_array_en_bookix, EN_COPYRIGHT)
         
         # French Setup
-        @fr_bookix_file = 'Hymns.Cantiques 1998.bookix'
+        @fr_bookix_file = 'Hymns.français.Cantiques 1998.bookix'
         @hymn_array_fr_hymns = parse_hymns(DATA_PATH + 'HymnsFR.dat')
         @hymn_array_fr_bookix = parse_bookix(DATA_PATH + @fr_bookix_file)
         generate_copyright_report(@fr_bookix_file, @hymn_array_fr_bookix, FR_COPYRIGHT)
