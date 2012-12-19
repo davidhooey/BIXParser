@@ -1,1 +1,5 @@
+.DS_Store
+test/.DS_Store
 test/data/*
+test/*.rpt
+*.gem
