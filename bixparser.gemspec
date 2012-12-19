@@ -9,6 +9,5 @@ Gem::Specification.new do |s|
     s.files         = ['lib/bixparser.rb']
     s.test_files    = ['test/test_bixparser.rb','test/parse.rb']
     s.require_path  = 'lib'
-    
     s.add_runtime_dependency 'unicode_utils'
 end
